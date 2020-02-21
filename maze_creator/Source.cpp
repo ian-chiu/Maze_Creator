@@ -13,11 +13,12 @@ enum
 
 int main (int argc, char* argv[])
 {
-	int nScreenWidth = 640;
-	int nScreenHeight = 400;
+	int nCellUnit = 8;
+	int nScreenWidth = 160 * nCellUnit;
+	int nScreenHeight = 100 * nCellUnit;
 
-	int nMazeWidth = 160;
-	int nMazeHeight = 100;
+	int nMazeWidth = 40 * nCellUnit;
+	int nMazeHeight = 25 * nCellUnit;
 	int nVistedCells;
 	std::stack<std::pair<int, int>> myStack;
 	int* maze = new int[nMazeHeight * nMazeWidth];
@@ -47,19 +48,20 @@ int main (int argc, char* argv[])
 		SDL_RenderClear(gRenderer);
 
 		// Draw Maze
-		for (size_t x = 0; x < nMazeWidth; ++x)
+		for (int x = 0; x < nMazeWidth; x+=nCellUnit)
 		{
-			for (size_t y = 0; y < nMazeHeight; ++y)
+			for (int y = 0; y < nMazeHeight; y+=nCellUnit)
 			{
+				SDL_Rect cell = { x, y, nCellUnit, nCellUnit };
 				if (maze[y * nMazeWidth + x] & CELL_PATH_VISTED)
 				{
 					SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
-					SDL_RenderDrawPoint(gRenderer, x, y);
+					SDL_RenderFillRect(gRenderer, &cell);
 				}
 				else
 				{
 					SDL_SetRenderDrawColor(gRenderer, 0, 0, 255, 255);
-					SDL_RenderDrawPoint(gRenderer, x, y);
+					SDL_RenderFillRect(gRenderer, &cell);
 				}
 			}
 		}
