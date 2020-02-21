@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <iostream>
 #include <stack>
+#include <vector>
 
 enum
 {
@@ -8,7 +9,7 @@ enum
 	CELL_PATH_E = 0x02,
 	CELL_PATH_S = 0x04,
 	CELL_PATH_W = 0x08,
-	CELL_PATH_VISTED = 0x10
+	CELL_PATH_VISITED = 0x10
 };
 
 int main (int argc, char* argv[])
@@ -21,13 +22,15 @@ int main (int argc, char* argv[])
 	int nMazeHeight = 25 * nCellUnit;
 	int nVistedCells;
 	std::stack<std::pair<int, int>> myStack;
-	int* maze = new int[nMazeHeight * nMazeWidth];
-	memset(maze, 0, nMazeHeight * nMazeWidth);
-	int nPathCell = 4;
+	std::vector<int> maze(nMazeHeight * nMazeWidth, 0);
+	int nPathCell = 3; // the side lengeth of a path (cell unit)
 
 	myStack.push(std::make_pair(0, 0));
-	maze[0] = CELL_PATH_VISTED;
+	maze[0] = CELL_PATH_VISITED;
 	nVistedCells = 1;
+
+	maze[25] = CELL_PATH_E;
+	maze[10] = CELL_PATH_S;
 
 	SDL_Window* gWindow = nullptr;
 	SDL_Renderer* gRenderer = nullptr;
@@ -50,18 +53,20 @@ int main (int argc, char* argv[])
 		SDL_RenderClear(gRenderer);
 
 		// Draw Maze
-		for (int x = 0; x < nMazeWidth; x += nCellUnit)
+		for (int x = 0; x < nMazeWidth; x++)
 		{
-			for (int y = 0; y < nMazeHeight; y += nCellUnit)
+			for (int y = 0; y < nMazeHeight; y++)
 			{
+				int mazeBlock_cor_x = x * (nPathCell + 1) * nCellUnit;
+				int mazeBlock_cor_y = y * (nPathCell + 1) * nCellUnit;
 				mazeBlock = { 
-					x * nPathCell,
-					y * nPathCell,
-					nCellUnit * (nPathCell - 1),
-					nCellUnit * (nPathCell - 1)
+					mazeBlock_cor_x,
+					mazeBlock_cor_y,
+					nCellUnit * nPathCell,
+					nCellUnit * nPathCell
 				};
 
-				if (maze[y * nMazeWidth + x] & CELL_PATH_VISTED)
+				if (maze[y * nMazeWidth + x] & CELL_PATH_VISITED)
 				{
 					SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
 					SDL_RenderFillRect(gRenderer, &mazeBlock);
@@ -71,13 +76,39 @@ int main (int argc, char* argv[])
 					SDL_SetRenderDrawColor(gRenderer, 0, 0, 255, 255);
 					SDL_RenderFillRect(gRenderer, &mazeBlock);
 				}
+
+				SDL_Rect pathEastLinkRec = {
+					mazeBlock_cor_x,
+					mazeBlock_cor_y,
+					nCellUnit * (nPathCell + 1), // plus 1 to elimate the wall
+					nCellUnit * nPathCell
+				};
+
+				SDL_Rect pathSouthLinkRec = {
+					mazeBlock_cor_x,
+					mazeBlock_cor_y,
+					nCellUnit * nPathCell, // plus 1 to elimate the wall
+					nCellUnit * (nPathCell + 1)
+				};
+
+				if (maze[y * nMazeWidth + x] & CELL_PATH_E)
+				{
+					SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+					SDL_RenderFillRect(gRenderer, &pathEastLinkRec);
+				}
+
+				if (maze[y * nMazeWidth + x] & CELL_PATH_S)
+				{
+					SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+					SDL_RenderFillRect(gRenderer, &pathSouthLinkRec);
+				}
+				
 			}
 		}
 
 		SDL_RenderPresent(gRenderer);
 	}
 
-	std::cout << mazeBlock.x << " " << mazeBlock.y << std::endl;
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);
 	
