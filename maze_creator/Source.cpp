@@ -13,7 +13,7 @@ enum
 
 int main (int argc, char* argv[])
 {
-	int nCellUnit = 8;
+	int nCellUnit = 8; // a cell is a 8*8 px square
 	int nScreenWidth = 160 * nCellUnit;
 	int nScreenHeight = 100 * nCellUnit;
 
@@ -23,6 +23,7 @@ int main (int argc, char* argv[])
 	std::stack<std::pair<int, int>> myStack;
 	int* maze = new int[nMazeHeight * nMazeWidth];
 	memset(maze, 0, nMazeHeight * nMazeWidth);
+	int nPathCell = 4;
 
 	myStack.push(std::make_pair(0, 0));
 	maze[0] = CELL_PATH_VISTED;
@@ -35,6 +36,7 @@ int main (int argc, char* argv[])
 
 	bool bQuit = false;
 	SDL_Event event;
+	SDL_Rect mazeBlock;
 	while (!bQuit)
 	{
 		while (SDL_PollEvent(&event) != 0)
@@ -48,26 +50,36 @@ int main (int argc, char* argv[])
 		SDL_RenderClear(gRenderer);
 
 		// Draw Maze
-		for (int x = 0; x < nMazeWidth; x+=nCellUnit)
+		for (int x = 0; x < nMazeWidth; x += nCellUnit)
 		{
-			for (int y = 0; y < nMazeHeight; y+=nCellUnit)
+			for (int y = 0; y < nMazeHeight; y += nCellUnit)
 			{
-				SDL_Rect cell = { x, y, nCellUnit, nCellUnit };
+				mazeBlock = { 
+					x * nPathCell,
+					y * nPathCell,
+					nCellUnit * (nPathCell - 1),
+					nCellUnit * (nPathCell - 1)
+				};
+
 				if (maze[y * nMazeWidth + x] & CELL_PATH_VISTED)
 				{
 					SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
-					SDL_RenderFillRect(gRenderer, &cell);
+					SDL_RenderFillRect(gRenderer, &mazeBlock);
 				}
 				else
 				{
 					SDL_SetRenderDrawColor(gRenderer, 0, 0, 255, 255);
-					SDL_RenderFillRect(gRenderer, &cell);
+					SDL_RenderFillRect(gRenderer, &mazeBlock);
 				}
 			}
 		}
 
 		SDL_RenderPresent(gRenderer);
 	}
+
+	std::cout << mazeBlock.x << " " << mazeBlock.y << std::endl;
+	SDL_DestroyRenderer(gRenderer);
+	SDL_DestroyWindow(gWindow);
 	
 	return 0;
 }
