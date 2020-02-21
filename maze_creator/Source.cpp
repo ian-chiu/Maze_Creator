@@ -2,6 +2,8 @@
 #include <iostream>
 #include <stack>
 #include <vector>
+#include <thread>
+#include <chrono>
 
 enum
 {
@@ -18,19 +20,17 @@ int main (int argc, char* argv[])
 	int nScreenWidth = 160 * nCellUnit;
 	int nScreenHeight = 100 * nCellUnit;
 
-	int nMazeWidth = 40 * nCellUnit;
-	int nMazeHeight = 25 * nCellUnit;
+	int nMazeWidth = 40;
+	int nMazeHeight = 25;
 	int nVistedCells;
 	std::stack<std::pair<int, int>> myStack;
 	std::vector<int> maze(nMazeHeight * nMazeWidth, 0);
 	int nPathCell = 3; // the side lengeth of a path (cell unit)
+	std::cout << maze.size() << std::endl;
 
 	myStack.push(std::make_pair(0, 0));
 	maze[0] = CELL_PATH_VISITED;
 	nVistedCells = 1;
-
-	maze[25] = CELL_PATH_E;
-	maze[10] = CELL_PATH_S;
 
 	SDL_Window* gWindow = nullptr;
 	SDL_Renderer* gRenderer = nullptr;
@@ -42,12 +42,79 @@ int main (int argc, char* argv[])
 	SDL_Rect mazeBlock;
 	while (!bQuit)
 	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		while (SDL_PollEvent(&event) != 0)
 		{
 			if (event.type == SDL_QUIT)
 				bQuit = true;
 		}
 
+		// =======DO MAZE ALGORITHM======
+		if (nVistedCells < nMazeHeight * nMazeWidth)
+		{
+			int CurrentPos_x = myStack.top().first;
+			int CurrentPos_y = myStack.top().second;
+			auto offset = [&](int x, int y) {
+				return (myStack.top().second + y) * nMazeWidth + myStack.top().first + x;
+			};
+			/// Step 1: Create a set of unvisited neighbor
+			std::vector<int> neighbors{};
+			// Checking north neighbor
+			if (myStack.top().second > 0 && ( (maze[offset(0, -1)] & CELL_PATH_VISITED) == 0 )) 
+				neighbors.push_back(0);
+			// East neighbor
+			if (myStack.top().first < nMazeWidth -1 && ( (maze[offset(1, 0)] & CELL_PATH_VISITED) == 0 ))
+				neighbors.push_back(1);
+			// South neighbor
+			if (myStack.top().second < nMazeHeight -1 && ( (maze[offset(0, 1)] & CELL_PATH_VISITED) == 0 ))
+				neighbors.push_back(2);
+			// West neighbor
+			if (myStack.top().first > 0 && ( (maze[offset(-1, 0)] & CELL_PATH_VISITED) == 0 ))
+				neighbors.push_back(3);
+
+			if (!neighbors.empty())
+			{
+				// choose one avaliable neighbor at random
+				int next_cell_dir = neighbors[rand() % neighbors.size()];
+				switch (next_cell_dir)
+				{
+				case 0:
+					maze[offset(0, 0)] |= CELL_PATH_N;
+					maze[offset(0, -1)] |= CELL_PATH_S;
+					myStack.push(std::make_pair(CurrentPos_x, CurrentPos_y - 1));
+					break;
+
+				case 1: 
+					maze[offset(0, 0)] |= CELL_PATH_E;
+					maze[offset(1, 0)] |= CELL_PATH_W;
+					myStack.push(std::make_pair(CurrentPos_x + 1, CurrentPos_y));
+					break;
+
+				case 2:
+					maze[offset(0, 0)] |= CELL_PATH_S;
+					maze[offset(0, 1)] |= CELL_PATH_N;
+					myStack.push(std::make_pair(CurrentPos_x, CurrentPos_y + 1));
+					break;
+
+				case 3:
+					maze[offset(0, 0)] |= CELL_PATH_W;
+					maze[offset(-1, 0)] |= CELL_PATH_E;
+					myStack.push(std::make_pair(CurrentPos_x - 1, CurrentPos_y));
+					break;
+				}
+
+				maze[offset(0, 0)] |= CELL_PATH_VISITED;
+				nVistedCells++;
+			}
+			else
+			{
+				myStack.pop();
+			}
+
+		}
+
+
+		// ========DRAW SOME STUFF=======
 		// Clear screen
 		SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
 		SDL_RenderClear(gRenderer);
@@ -105,7 +172,6 @@ int main (int argc, char* argv[])
 				
 			}
 		}
-
 		SDL_RenderPresent(gRenderer);
 	}
 
