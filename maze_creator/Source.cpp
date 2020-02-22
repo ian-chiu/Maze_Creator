@@ -7,11 +7,11 @@
 
 enum
 {
-	CELL_PATH_N = 0x01,
-	CELL_PATH_E = 0x02,
-	CELL_PATH_S = 0x04,
-	CELL_PATH_W = 0x08,
-	CELL_PATH_VISITED = 0x10
+	CELL_PATH_N = 0x01,			//00001
+	CELL_PATH_E = 0x02,			//00010
+	CELL_PATH_S = 0x04,			//00100
+	CELL_PATH_W = 0x08,			//01000
+	CELL_PATH_VISITED = 0x10    //10000
 };
 
 int main (int argc, char* argv[])
@@ -19,6 +19,7 @@ int main (int argc, char* argv[])
 	int nCellUnit = 8; // a cell is a 8*8 px square
 	int nScreenWidth = 160 * nCellUnit;
 	int nScreenHeight = 100 * nCellUnit;
+	srand(time(0));
 
 	int nMazeWidth = 40;
 	int nMazeHeight = 25;
@@ -26,7 +27,6 @@ int main (int argc, char* argv[])
 	std::stack<std::pair<int, int>> myStack;
 	std::vector<int> maze(nMazeHeight * nMazeWidth, 0);
 	int nPathCell = 3; // the side lengeth of a path (cell unit)
-	std::cout << maze.size() << std::endl;
 
 	myStack.push(std::make_pair(0, 0));
 	maze[0] = CELL_PATH_VISITED;
@@ -169,6 +169,16 @@ int main (int argc, char* argv[])
 					SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
 					SDL_RenderFillRect(gRenderer, &pathSouthLinkRec);
 				}
+
+				SDL_Rect shuttle = {
+					myStack.top().first * (nPathCell + 1)* nCellUnit,
+					myStack.top().second * (nPathCell + 1)* nCellUnit,
+					nCellUnit * nPathCell,
+					nCellUnit * nPathCell
+				};
+
+				SDL_SetRenderDrawColor(gRenderer, 241, 90, 34, 255);
+				SDL_RenderFillRect(gRenderer, &shuttle);
 				
 			}
 		}
